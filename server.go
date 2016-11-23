@@ -20,13 +20,7 @@ var myip string
 func ipHandler(w http.ResponseWriter, r *http.Request) {
     ip, _, err := net.SplitHostPort(r.RemoteAddr)
     if err == nil {
-        if ip == "127.0.0.1" ||
-           ip == "::1" ||
-           isPrivateSubnet(net.ParseIP(ip)) { //local docker containers etc
-           fmt.Fprintf(w, "%s", myip)
-        } else {
-           fmt.Fprintf(w, "%s", ip)
-        }
+        fmt.Fprintf(w, "%s", replaceLocalIP(ip))
     }
 }
 
@@ -34,8 +28,7 @@ func dnsHandler(w http.ResponseWriter, r *http.Request) {
     ip, _, err := net.SplitHostPort(r.RemoteAddr)
     if err == nil {
         //TODO aliases
-        //TODO fqdn instead of 'localhost' - client & server on same host
-        names, err := net.LookupAddr(ip);
+        names, err := net.LookupAddr(replaceLocalIP(ip));
         if err == nil {
             for _,v := range names {
                 //truncate trailing '.' that may be appended.
@@ -77,13 +70,28 @@ func AllowPrivateSubnetForMyip() *net.IPNet {
 }
 
 // isPrivateSubnet - check to see if this ip is in a private subnet
-func isPrivateSubnet(ip net.IP) bool {
+func isPrivateSubnet(ips string) bool {
+    ip := net.ParseIP(ips)
     for _, r := range privateCIDRs {
       if r.Contains(ip) {
           return true
       }
     }
     return false
+}
+
+//localhost or private networks such as docker.
+func isLocalIP(ip string) bool {
+    return ip == "127.0.0.1" ||
+           ip == "::1" ||
+           isPrivateSubnet(ip)
+}
+
+func replaceLocalIP(ip string) string {
+    if isLocalIP(ip) {
+        return myip
+    }
+    return ip
 }
 
 // Get preferred outbound ip of this machine
