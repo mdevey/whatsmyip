@@ -27,7 +27,6 @@ func ipHandler(w http.ResponseWriter, r *http.Request) {
 func dnsHandler(w http.ResponseWriter, r *http.Request) {
     ip, _, err := net.SplitHostPort(r.RemoteAddr)
     if err == nil {
-        //TODO aliases
         names, err := net.LookupAddr(replaceLocalIP(ip));
         if err == nil {
             for _,v := range names {
