@@ -4,5 +4,5 @@ FROM alpine:3.4
 # CC=$(which musl-gcc) go build --ldflags '-w -linkmode external -extldflags "-static"' server.go
 ADD server /
 
-CMD ["/server"]
+ENTRYPOINT ["/server"]
   
